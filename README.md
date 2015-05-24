@@ -1,7 +1,7 @@
 # Human Activity Recognition
 ---------------
 ### For report go here:
-https://github.com/zieka/human_activity_recognition
+http://zieka.github.io/human_activity_recognition/
 
 ## About Project
 Using the Human Activity Recognition dataset (http://groupware.les.inf.puc-rio.br/har) this project reports on the following:
