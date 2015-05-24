@@ -1,6 +1,9 @@
 # Human Activity Recognition
 ---------------
+### For report go here:
+https://github.com/zieka/human_activity_recognition
 
+## About Project
 Using the Human Activity Recognition dataset (http://groupware.les.inf.puc-rio.br/har) this project reports on the following:
 
 * Splitting the set into a testing set, validation set, and training set
