@@ -73,11 +73,77 @@ img {
 </div>
 <div id="preparing-the-data" class="section level1">
 <h1>Preparing the Data</h1>
+<div id="required-packags" class="section level3">
+<h3>Required Packag(s):</h3>
+<pre class="r"><code>library(caret)</code></pre>
+<pre><code>## Loading required package: lattice
+## Loading required package: ggplot2</code></pre>
+</div>
 <div id="loading-the-data" class="section level2">
 <h2>Loading the Data</h2>
+<pre class="r"><code>training.raw &lt;- read.csv(&quot;./data/pml-training.csv&quot;)
+testing.raw &lt;- read.csv(&quot;./data/pml-testing.csv&quot;)</code></pre>
+<pre class="r"><code>colnames(training.raw)</code></pre>
+<pre><code>##   [1] &quot;X&quot;                        &quot;user_name&quot;                &quot;raw_timestamp_part_1&quot;    
+##   [4] &quot;raw_timestamp_part_2&quot;     &quot;cvtd_timestamp&quot;           &quot;new_window&quot;              
+##   [7] &quot;num_window&quot;               &quot;roll_belt&quot;                &quot;pitch_belt&quot;              
+##  [10] &quot;yaw_belt&quot;                 &quot;total_accel_belt&quot;         &quot;kurtosis_roll_belt&quot;      
+##  [13] &quot;kurtosis_picth_belt&quot;      &quot;kurtosis_yaw_belt&quot;        &quot;skewness_roll_belt&quot;      
+##  [16] &quot;skewness_roll_belt.1&quot;     &quot;skewness_yaw_belt&quot;        &quot;max_roll_belt&quot;           
+##  [19] &quot;max_picth_belt&quot;           &quot;max_yaw_belt&quot;             &quot;min_roll_belt&quot;           
+##  [22] &quot;min_pitch_belt&quot;           &quot;min_yaw_belt&quot;             &quot;amplitude_roll_belt&quot;     
+##  [25] &quot;amplitude_pitch_belt&quot;     &quot;amplitude_yaw_belt&quot;       &quot;var_total_accel_belt&quot;    
+##  [28] &quot;avg_roll_belt&quot;            &quot;stddev_roll_belt&quot;         &quot;var_roll_belt&quot;           
+##  [31] &quot;avg_pitch_belt&quot;           &quot;stddev_pitch_belt&quot;        &quot;var_pitch_belt&quot;          
+##  [34] &quot;avg_yaw_belt&quot;             &quot;stddev_yaw_belt&quot;          &quot;var_yaw_belt&quot;            
+##  [37] &quot;gyros_belt_x&quot;             &quot;gyros_belt_y&quot;             &quot;gyros_belt_z&quot;            
+##  [40] &quot;accel_belt_x&quot;             &quot;accel_belt_y&quot;             &quot;accel_belt_z&quot;            
+##  [43] &quot;magnet_belt_x&quot;            &quot;magnet_belt_y&quot;            &quot;magnet_belt_z&quot;           
+##  [46] &quot;roll_arm&quot;                 &quot;pitch_arm&quot;                &quot;yaw_arm&quot;                 
+##  [49] &quot;total_accel_arm&quot;          &quot;var_accel_arm&quot;            &quot;avg_roll_arm&quot;            
+##  [52] &quot;stddev_roll_arm&quot;          &quot;var_roll_arm&quot;             &quot;avg_pitch_arm&quot;           
+##  [55] &quot;stddev_pitch_arm&quot;         &quot;var_pitch_arm&quot;            &quot;avg_yaw_arm&quot;             
+##  [58] &quot;stddev_yaw_arm&quot;           &quot;var_yaw_arm&quot;              &quot;gyros_arm_x&quot;             
+##  [61] &quot;gyros_arm_y&quot;              &quot;gyros_arm_z&quot;              &quot;accel_arm_x&quot;             
+##  [64] &quot;accel_arm_y&quot;              &quot;accel_arm_z&quot;              &quot;magnet_arm_x&quot;            
+##  [67] &quot;magnet_arm_y&quot;             &quot;magnet_arm_z&quot;             &quot;kurtosis_roll_arm&quot;       
+##  [70] &quot;kurtosis_picth_arm&quot;       &quot;kurtosis_yaw_arm&quot;         &quot;skewness_roll_arm&quot;       
+##  [73] &quot;skewness_pitch_arm&quot;       &quot;skewness_yaw_arm&quot;         &quot;max_roll_arm&quot;            
+##  [76] &quot;max_picth_arm&quot;            &quot;max_yaw_arm&quot;              &quot;min_roll_arm&quot;            
+##  [79] &quot;min_pitch_arm&quot;            &quot;min_yaw_arm&quot;              &quot;amplitude_roll_arm&quot;      
+##  [82] &quot;amplitude_pitch_arm&quot;      &quot;amplitude_yaw_arm&quot;        &quot;roll_dumbbell&quot;           
+##  [85] &quot;pitch_dumbbell&quot;           &quot;yaw_dumbbell&quot;             &quot;kurtosis_roll_dumbbell&quot;  
+##  [88] &quot;kurtosis_picth_dumbbell&quot;  &quot;kurtosis_yaw_dumbbell&quot;    &quot;skewness_roll_dumbbell&quot;  
+##  [91] &quot;skewness_pitch_dumbbell&quot;  &quot;skewness_yaw_dumbbell&quot;    &quot;max_roll_dumbbell&quot;       
+##  [94] &quot;max_picth_dumbbell&quot;       &quot;max_yaw_dumbbell&quot;         &quot;min_roll_dumbbell&quot;       
+##  [97] &quot;min_pitch_dumbbell&quot;       &quot;min_yaw_dumbbell&quot;         &quot;amplitude_roll_dumbbell&quot; 
+## [100] &quot;amplitude_pitch_dumbbell&quot; &quot;amplitude_yaw_dumbbell&quot;   &quot;total_accel_dumbbell&quot;    
+## [103] &quot;var_accel_dumbbell&quot;       &quot;avg_roll_dumbbell&quot;        &quot;stddev_roll_dumbbell&quot;    
+## [106] &quot;var_roll_dumbbell&quot;        &quot;avg_pitch_dumbbell&quot;       &quot;stddev_pitch_dumbbell&quot;   
+## [109] &quot;var_pitch_dumbbell&quot;       &quot;avg_yaw_dumbbell&quot;         &quot;stddev_yaw_dumbbell&quot;     
+## [112] &quot;var_yaw_dumbbell&quot;         &quot;gyros_dumbbell_x&quot;         &quot;gyros_dumbbell_y&quot;        
+## [115] &quot;gyros_dumbbell_z&quot;         &quot;accel_dumbbell_x&quot;         &quot;accel_dumbbell_y&quot;        
+## [118] &quot;accel_dumbbell_z&quot;         &quot;magnet_dumbbell_x&quot;        &quot;magnet_dumbbell_y&quot;       
+## [121] &quot;magnet_dumbbell_z&quot;        &quot;roll_forearm&quot;             &quot;pitch_forearm&quot;           
+## [124] &quot;yaw_forearm&quot;              &quot;kurtosis_roll_forearm&quot;    &quot;kurtosis_picth_forearm&quot;  
+## [127] &quot;kurtosis_yaw_forearm&quot;     &quot;skewness_roll_forearm&quot;    &quot;skewness_pitch_forearm&quot;  
+## [130] &quot;skewness_yaw_forearm&quot;     &quot;max_roll_forearm&quot;         &quot;max_picth_forearm&quot;       
+## [133] &quot;max_yaw_forearm&quot;          &quot;min_roll_forearm&quot;         &quot;min_pitch_forearm&quot;       
+## [136] &quot;min_yaw_forearm&quot;          &quot;amplitude_roll_forearm&quot;   &quot;amplitude_pitch_forearm&quot; 
+## [139] &quot;amplitude_yaw_forearm&quot;    &quot;total_accel_forearm&quot;      &quot;var_accel_forearm&quot;       
+## [142] &quot;avg_roll_forearm&quot;         &quot;stddev_roll_forearm&quot;      &quot;var_roll_forearm&quot;        
+## [145] &quot;avg_pitch_forearm&quot;        &quot;stddev_pitch_forearm&quot;     &quot;var_pitch_forearm&quot;       
+## [148] &quot;avg_yaw_forearm&quot;          &quot;stddev_yaw_forearm&quot;       &quot;var_yaw_forearm&quot;         
+## [151] &quot;gyros_forearm_x&quot;          &quot;gyros_forearm_y&quot;          &quot;gyros_forearm_z&quot;         
+## [154] &quot;accel_forearm_x&quot;          &quot;accel_forearm_y&quot;          &quot;accel_forearm_z&quot;         
+## [157] &quot;magnet_forearm_x&quot;         &quot;magnet_forearm_y&quot;         &quot;magnet_forearm_z&quot;        
+## [160] &quot;classe&quot;</code></pre>
 </div>
 <div id="cleaning-the-data" class="section level2">
 <h2>Cleaning the Data</h2>
+<p>First 7 columns do not provide kinametic data so we can remove them as they will not be very good predictors:</p>
+<pre class="r"><code>training.clean &lt;- subset( training.raw, select = -c(1:7) )
+testing.clean &lt;- subset ( testing.raw, select = -c(1:7) )</code></pre>
 </div>
 <div id="splitting-the-data" class="section level2">
 <h2>Splitting the Data</h2>

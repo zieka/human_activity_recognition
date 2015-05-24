@@ -4,14 +4,36 @@ author: "Kyle Scully"
 date: "May 23, 2015"
 output: html_document
 ---
-
+```{r, echo=FALSE}
+options(width = 100)
+```
 # Introduction
 
 # Preparing the Data
+### Required Packag(s):
+```{r warning=FALSE}
+library(caret)
+````
 
 ## Loading the Data
 
+```{r}
+training.raw <- read.csv("./data/pml-training.csv")
+testing.raw <- read.csv("./data/pml-testing.csv")
+```
+
+```{r}
+colnames(training.raw)
+```
+
 ## Cleaning the Data
+
+First 7 columns do not provide kinametic data so we can remove them as they will not be very good predictors:
+
+```{r}
+training.clean <- subset( training.raw, select = -c(1:7) )
+testing.clean <- subset ( testing.raw, select = -c(1:7) )
+```
 
 ## Splitting the Data
 
