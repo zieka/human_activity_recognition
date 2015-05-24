@@ -10,9 +10,10 @@ options(width = 100)
 # Introduction
 
 # Preparing the Data
-### Required Packag(s):
+### Required Package(s):
 ```{r warning=FALSE}
 library(caret)
+library(AppliedPredictiveModeling)
 ````
 
 ## Loading the Data
@@ -37,6 +38,13 @@ testing.clean <- subset ( testing.raw, select = -c(1:7) )
 
 ## Splitting the Data
 
+We create a validation set by splitting our training set randomly.  Sixty percent (60%) of the original set will be partitioned for training and the remaining forty percent (40%) will be partitioned for our validation set:
+
+```{r}
+training.index <- createDataPartition(training.clean$classe, p=0.60, list=F)
+training.set <- training.clean[training.index, ]
+validation.set <- training.clean[-training.index, ]
+```
 
 # Building a Predictive Model
 

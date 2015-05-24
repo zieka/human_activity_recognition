@@ -73,11 +73,12 @@ img {
 </div>
 <div id="preparing-the-data" class="section level1">
 <h1>Preparing the Data</h1>
-<div id="required-packags" class="section level3">
-<h3>Required Packag(s):</h3>
+<div id="required-packages" class="section level3">
+<h3>Required Package(s):</h3>
 <pre class="r"><code>library(caret)</code></pre>
 <pre><code>## Loading required package: lattice
 ## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>library(AppliedPredictiveModeling)</code></pre>
 </div>
 <div id="loading-the-data" class="section level2">
 <h2>Loading the Data</h2>
@@ -147,6 +148,10 @@ testing.clean &lt;- subset ( testing.raw, select = -c(1:7) )</code></pre>
 </div>
 <div id="splitting-the-data" class="section level2">
 <h2>Splitting the Data</h2>
+<p>We create a validation set by splitting our training set randomly. Sixty percent (60%) of the original set will be partitioned for training and the remaining forty percent (40%) will be partitioned for our validation set:</p>
+<pre class="r"><code>training.index &lt;- createDataPartition(training.clean$classe, p=0.60, list=F)
+training.set &lt;- training.clean[training.index, ]
+validation.set &lt;- training.clean[-training.index, ]</code></pre>
 </div>
 </div>
 <div id="building-a-predictive-model" class="section level1">
