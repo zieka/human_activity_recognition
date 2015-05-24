@@ -78,13 +78,14 @@ img {
 <pre class="r"><code>library(caret)</code></pre>
 <pre><code>## Loading required package: lattice
 ## Loading required package: ggplot2</code></pre>
-<pre class="r"><code>library(AppliedPredictiveModeling)</code></pre>
+<p>Set the overal seed as many functions will be using random sampling:</p>
+<pre class="r"><code>set.seed(123)</code></pre>
 </div>
 <div id="loading-the-data" class="section level2">
 <h2>Loading the Data</h2>
-<pre class="r"><code>training.raw &lt;- read.csv(&quot;./data/pml-training.csv&quot;)
-testing.raw &lt;- read.csv(&quot;./data/pml-testing.csv&quot;)</code></pre>
-<pre class="r"><code>colnames(training.raw)</code></pre>
+<pre class="r"><code>training.set &lt;- read.csv(&quot;./data/pml-training.csv&quot;)
+testing.set &lt;- read.csv(&quot;./data/pml-testing.csv&quot;)</code></pre>
+<pre class="r"><code>colnames(training.set)</code></pre>
 <pre><code>##   [1] &quot;X&quot;                        &quot;user_name&quot;                &quot;raw_timestamp_part_1&quot;    
 ##   [4] &quot;raw_timestamp_part_2&quot;     &quot;cvtd_timestamp&quot;           &quot;new_window&quot;              
 ##   [7] &quot;num_window&quot;               &quot;roll_belt&quot;                &quot;pitch_belt&quot;              
@@ -143,35 +144,138 @@ testing.raw &lt;- read.csv(&quot;./data/pml-testing.csv&quot;)</code></pre>
 <div id="cleaning-the-data" class="section level2">
 <h2>Cleaning the Data</h2>
 <p>First 7 columns do not provide kinametic data so we can remove them as they will not be very good predictors:</p>
-<pre class="r"><code>training.clean &lt;- subset( training.raw, select = -c(1:7) )
-testing.clean &lt;- subset ( testing.raw, select = -c(1:7) )</code></pre>
+<pre class="r"><code>training.set &lt;- subset( training.set, select = -c(1:7) )
+testing.set &lt;- subset ( testing.set, select = -c(1:7) )</code></pre>
+<p>We remove the columns with NAs as they will likely confound our results:</p>
+<pre class="r"><code>training.set &lt;- training.set[, colSums(is.na(training.set)) == 0] 
+testing.set &lt;- testing.set[, colSums(is.na(testing.set)) == 0] </code></pre>
+<p>We Make sure all values are numeric with the exception of the classe column:</p>
+<pre class="r"><code>upper.bound &lt;- which( colnames(training.set)==&quot;classe&quot; ) - 1
+training.set &lt;- training.set[, sapply(training.set[1:upper.bound], is.numeric)] 
+testing.set &lt;- testing.set[, sapply(testing.set, is.numeric)] </code></pre>
 </div>
 <div id="splitting-the-data" class="section level2">
 <h2>Splitting the Data</h2>
 <p>We create a validation set by splitting our training set randomly. Sixty percent (60%) of the original set will be partitioned for training and the remaining forty percent (40%) will be partitioned for our validation set:</p>
-<pre class="r"><code>training.index &lt;- createDataPartition(training.clean$classe, p=0.60, list=F)
-training.set &lt;- training.clean[training.index, ]
-validation.set &lt;- training.clean[-training.index, ]</code></pre>
+<pre class="r"><code>training.index &lt;- createDataPartition(training.set$classe, p=0.60, list=F)
+validation.set &lt;- training.set[-training.index, ]
+training.set &lt;- training.set[training.index, ]</code></pre>
 </div>
 </div>
 <div id="building-a-predictive-model" class="section level1">
 <h1>Building a Predictive Model</h1>
 <div id="machine-learning" class="section level2">
 <h2>Machine Learning</h2>
+<p>We use a random forest algorith with 5 fold cross-validation on our training set:</p>
+<pre class="r"><code>control &lt;- trainControl(method=&quot;cv&quot;, 5)
+model.randomforest &lt;- train(classe ~ ., data=training.set, method=&quot;rf&quot;, trControl=control, ntrees=250)
+model.randomforest</code></pre>
+<pre><code>## Random Forest 
+## 
+## 11776 samples
+##    52 predictor
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## No pre-processing
+## Resampling: Cross-Validated (5 fold) 
+## 
+## Summary of sample sizes: 9422, 9421, 9420, 9421, 9420 
+## 
+## Resampling results across tuning parameters:
+## 
+##   mtry  Accuracy   Kappa      Accuracy SD  Kappa SD   
+##    2    0.9887063  0.9857121  0.003038447  0.003846367
+##   27    0.9887062  0.9857130  0.001979593  0.002506262
+##   52    0.9831864  0.9787290  0.001710758  0.002165880
+## 
+## Accuracy was used to select the optimal model using  the largest value.
+## The final value used for the model was mtry = 2.</code></pre>
+<p>The model seems to have a high accuracy as the estimated out of bag error rate is less than 1%:</p>
+<pre class="r"><code>model.randomforest$finalModel</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(x = x, y = y, mtry = param$mtry, ntrees = 250) 
+##                Type of random forest: classification
+##                      Number of trees: 500
+## No. of variables tried at each split: 2
+## 
+##         OOB estimate of  error rate: 0.97%
+## Confusion matrix:
+##      A    B    C    D    E class.error
+## A 3341    3    1    0    3 0.002090800
+## B   18 2258    3    0    0 0.009214568
+## C    0   31 2019    4    0 0.017039922
+## D    1    0   40 1886    3 0.022797927
+## E    0    0    2    5 2158 0.003233256</code></pre>
 </div>
-<div id="cross-validating-the-model" class="section level2">
-<h2>Cross validating the model</h2>
+<div id="applying-model-to-the-validation-set" class="section level2">
+<h2>Applying Model to the validation set</h2>
+<p>We then apply this model to our validation set to test the accuracy of it on a set seperate from the set it used in training:</p>
+<pre class="r"><code>predict &lt;- predict(model.randomforest, validation.set)
+confusionMatrix &lt;- confusionMatrix(validation.set$classe, predict)
+confusionMatrix</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 2229    3    0    0    0
+##          B   10 1504    4    0    0
+##          C    0   13 1355    0    0
+##          D    0    0   25 1260    1
+##          E    0    0    3    4 1435
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.992           
+##                  95% CI : (0.9897, 0.9938)
+##     No Information Rate : 0.2854          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.9898          
+##  Mcnemar's Test P-Value : NA              
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9955   0.9895   0.9769   0.9968   0.9993
+## Specificity            0.9995   0.9978   0.9980   0.9960   0.9989
+## Pos Pred Value         0.9987   0.9908   0.9905   0.9798   0.9951
+## Neg Pred Value         0.9982   0.9975   0.9951   0.9994   0.9998
+## Prevalence             0.2854   0.1937   0.1768   0.1611   0.1830
+## Detection Rate         0.2841   0.1917   0.1727   0.1606   0.1829
+## Detection Prevalence   0.2845   0.1935   0.1744   0.1639   0.1838
+## Balanced Accuracy      0.9975   0.9936   0.9875   0.9964   0.9991</code></pre>
+<p>The accuracy of ~ 99% is plenty sufficent to state that this is a good model for classifying what activity is being performed. Now we can apply the model to our final test set.</p>
 </div>
 </div>
 <div id="testing-the-final-model" class="section level1">
 <h1>Testing the Final Model</h1>
 <div id="appling-the-model-to-a-test-set" class="section level2">
 <h2>Appling the model to a test set</h2>
+<p>We use our model to predict the activities performed in the final test set and then will submitted them online for the assignment to find how accurate the predictions were.</p>
+<pre class="r"><code>testing.prediction &lt;- predict(model.randomforest, testing.set)</code></pre>
+<pre><code>## Loading required package: randomForest</code></pre>
+<pre><code>## Warning: package 'randomForest' was built under R version 3.1.2</code></pre>
+<pre><code>## randomForest 4.6-10
+## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre class="r"><code>testing.prediction</code></pre>
+<pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
+## Levels: A B C D E</code></pre>
 <div id="properly-formating-the-results-for-submission" class="section level3">
 <h3>Properly formating the results for submission</h3>
+<pre class="r"><code>answers &lt;- testing.prediction
+pml_write_files &lt;- function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0(&quot;problem_id_&quot;,i,&quot;.txt&quot;)
+    write.table(x[i], file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(answers)</code></pre>
 </div>
 <div id="results" class="section level3">
 <h3>Results</h3>
+<p>All 20 cases in the test set were correctly classified by the prediction model.</p>
 </div>
 </div>
 </div>

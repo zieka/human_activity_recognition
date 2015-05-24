@@ -13,52 +13,109 @@ options(width = 100)
 ### Required Package(s):
 ```{r warning=FALSE}
 library(caret)
-library(AppliedPredictiveModeling)
 ````
+Set the overal seed as many functions will be using random sampling:
+```{r}
+set.seed(123)
+```
 
 ## Loading the Data
 
-```{r}
-training.raw <- read.csv("./data/pml-training.csv")
-testing.raw <- read.csv("./data/pml-testing.csv")
+```{r, cache=TRUE}
+training.set <- read.csv("./data/pml-training.csv")
+testing.set <- read.csv("./data/pml-testing.csv")
 ```
 
-```{r}
-colnames(training.raw)
+```{r, cache=TRUE}
+colnames(training.set)
 ```
 
 ## Cleaning the Data
 
 First 7 columns do not provide kinametic data so we can remove them as they will not be very good predictors:
 
-```{r}
-training.clean <- subset( training.raw, select = -c(1:7) )
-testing.clean <- subset ( testing.raw, select = -c(1:7) )
+```{r, cache=TRUE}
+training.set <- subset( training.set, select = -c(1:7) )
+testing.set <- subset ( testing.set, select = -c(1:7) )
+```
+
+We remove the columns with NAs as they will likely confound our results:
+
+```{r, cache=TRUE}
+training.set <- training.set[, colSums(is.na(training.set)) == 0] 
+testing.set <- testing.set[, colSums(is.na(testing.set)) == 0] 
+```
+
+We Make sure all values are numeric with the exception of the classe column:
+```{r, cache=TRUE}
+upper.bound <- which( colnames(training.set)=="classe" ) - 1
+training.set <- training.set[, sapply(training.set[1:upper.bound], is.numeric)] 
+testing.set <- testing.set[, sapply(testing.set, is.numeric)] 
 ```
 
 ## Splitting the Data
 
 We create a validation set by splitting our training set randomly.  Sixty percent (60%) of the original set will be partitioned for training and the remaining forty percent (40%) will be partitioned for our validation set:
 
-```{r}
-training.index <- createDataPartition(training.clean$classe, p=0.60, list=F)
-training.set <- training.clean[training.index, ]
-validation.set <- training.clean[-training.index, ]
+```{r, cache=TRUE}
+training.index <- createDataPartition(training.set$classe, p=0.60, list=F)
+validation.set <- training.set[-training.index, ]
+training.set <- training.set[training.index, ]
 ```
 
 # Building a Predictive Model
 
 ## Machine Learning
 
-## Cross validating the model
+We use a random forest algorith with 5 fold cross-validation on our training set:
+```{r, cache=TRUE, warning=FALSE}
+control <- trainControl(method="cv", 5)
+model.randomforest <- train(classe ~ ., data=training.set, method="rf", trControl=control, ntrees=250)
+model.randomforest
+```
+
+The model seems to have a high accuracy as the estimated out of bag error rate is less than 1%: 
+
+```{r, cache=TRUE}
+model.randomforest$finalModel
+```
+
+## Applying Model to the validation set
+We then apply this model to our validation set to test the accuracy of it on a set seperate from the set it used in training:
+
+```{r cache=TRUE}
+predict <- predict(model.randomforest, validation.set)
+confusionMatrix <- confusionMatrix(validation.set$classe, predict)
+confusionMatrix
+```
+
+The accuracy of ~ 99% is plenty sufficent to state that this is a good model for classifying what activity is being performed. Now we can apply the model to our final test set.
 
 # Testing the Final Model
 
 ## Appling the model to a test set
 
+We use our model to predict the activities performed in the final test set and then will submitted them online for the assignment to find how accurate the predictions were.
+
+```{r}
+testing.prediction <- predict(model.randomforest, testing.set)
+testing.prediction
+```
+
 ### Properly formating the results for submission
 
+```{r}
+answers <- testing.prediction
+pml_write_files <- function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i], file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(answers)
+```
 ### Results
-
+All 20 cases in the test set were correctly classified by the prediction model.
  
  
